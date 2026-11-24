@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Outrank – geography trumps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;600;800&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a pub-table card game — bold, quick, cheeky
+   IDEA: a deck of trump cards dealt on a cobalt table
+   PICTURE: the current country's card, stats listed, the asked stat lit up
+   COLOUR and TYPE: cobalt table, white cards, sun-yellow highlight; Archivo Black + Archivo
+   LAYOUT: question strip, card left, five answer cards right; stacks on phones */
+:root{color-scheme:light dark;--bg:light-dark(#1f45c9,#0d1f5e);--table2:light-dark(#2a52d8,#14297a);--card:light-dark(#fff,#18213f);--ink:light-dark(#111522,#eef1fb);--mute:light-dark(#5b6280,#a4acc9);--hi:#ffd23f;--hiInk:#2b2000;--ok:#1f9d55;--bad:#e5383b;--line:light-dark(#e3e6f0,#2b3560);--onbg:#fff}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,var(--table2),transparent 70%),var(--bg);background-attachment:fixed;color:var(--ink);font:16px/1.5 Archivo,system-ui,sans-serif;overflow-x:clip;min-height:100vh}
+.flag{font-family:"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif;line-height:1}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px max(4vw,14px);color:var(--onbg)}
+.logo{font:32px/1 "Archivo Black",sans-serif;letter-spacing:-.5px;cursor:pointer;background:none;border:0;color:inherit;padding:0}
+.logo span{color:var(--hi)}
+.hud{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,.14);border-radius:999px;padding:6px 14px;font-weight:600;white-space:nowrap}
+.pill b{color:var(--hi);font-family:"Archivo Black"}
+main{max-width:1120px;margin:0 auto;padding:6px max(4vw,14px) 48px}
+.hidden{display:none!important}
+.q{color:var(--onbg);font:clamp(22px,3.4vw,34px)/1.12 "Archivo Black",sans-serif;text-wrap:balance;margin:6px 0 18px}
+.q em{font-style:normal;background:var(--hi);color:var(--hiInk);padding:0 8px;border-radius:6px}
+.meta{color:rgba(255,255,255,.8);font-weight:600;margin:0 0 6px;font-size:14px}
+.board{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:760px){.board{grid-template-columns:minmax(0,1fr)}}
+.tcard{background:var(--card);border-radius:20px;padding:10px;box-shadow:0 18px 40px rgba(0,0,30,.35),0 0 0 6px rgba(255,255,255,.12);transform:rotate(-1.5deg);animation:deal .45s ease-out}
+@keyframes deal{from{transform:translateY(-30px) rotate(-8deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){.tcard{animation:none}}
+.thead{background:linear-gradient(160deg,#ffe27a,var(--hi));border-radius:14px;padding:16px;display:flex;gap:14px;align-items:center;color:var(--hiInk)}
+.thead .flag{font-size:58px}
+.thead h2{margin:0;font:26px/1.05 "Archivo Black",sans-serif}
+.thead p{margin:4px 0 0;font-weight:600;font-size:14px}
+.stats{list-style:none;margin:10px 0 0;padding:0}
+.stats li{display:flex;justify-content:space-between;gap:10px;padding:9px 10px;border-bottom:1px solid var(--line);font-size:15px}
+.stats li:last-child{border:0}
+.stats li span:last-child{font-weight:800;white-space:nowrap;text-align:right}
+.stats li.on{background:var(--hi);color:var(--hiInk);border-radius:10px;border:0}
+.tfoot{text-align:center;font-size:13px;color:var(--mute);padding:6px 0 2px}
+.opts{display:grid;gap:10px}
+.opt{display:flex;align-items:center;gap:14px;width:100%;min-height:62px;padding:10px 16px;border:0;border-radius:14px;background:var(--card);color:var(--ink);font:600 18px Archivo,sans-serif;text-align:left;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,40,.25);transition:transform .12s}
+.opt:hover:not(:disabled){transform:translateY(-2px)}
+.opt:focus-visible,.btn:focus-visible,input:focus-visible,.chip:focus-visible{outline:3px solid var(--hi);outline-offset:3px}
+.opt .flag{font-size:30px}
+.opt .k{width:28px;height:28px;flex:none;border-radius:8px;background:var(--line);display:grid;place-items:center;font-size:13px;color:var(--mute)}
+.opt .v{margin-left:auto;font-weight:800;white-space:nowrap}
+.opt:disabled{cursor:default}
+.opt.right{background:var(--ok);color:#fff}.opt.wrong{background:var(--bad);color:#fff}
+.opt.right .k,.opt.wrong .k{background:rgba(255,255,255,.25);color:#fff}
+.opt.dim{opacity:.62}
+.res{margin-top:16px;background:var(--card);border-radius:16px;padding:16px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.res h3{margin:0;font:22px/1.1 "Archivo Black",sans-serif}
+.res p{margin:2px 0 0;color:var(--mute)}
+.btn{min-height:46px;padding:10px 20px;border-radius:12px;border:0;background:var(--hi);color:var(--hiInk);font:800 16px Archivo,sans-serif;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.btn.ghost{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px currentColor}
+.res .btn{margin-left:auto}
+.home{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px}
+@media(max-width:860px){.home{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--card);border-radius:20px;padding:22px}
+.panel h2{margin:0 0 6px;font:26px/1.1 "Archivo Black",sans-serif}
+.panel h3{margin:18px 0 8px;font-size:17px}
+.lead{color:var(--onbg);font:clamp(34px,5vw,52px)/1.03 "Archivo Black",sans-serif;margin:8px 0 6px;text-wrap:balance}
+.sub{color:rgba(255,255,255,.88);font-size:17px;max-width:60ch;margin:0 0 20px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{min-height:44px;padding:8px 16px;border-radius:999px;border:2px solid var(--line);background:transparent;color:var(--ink);font:600 15px Archivo,system-ui,sans-serif;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--card);border-color:var(--ink)}
+label{font-weight:600;font-size:14px;display:block;margin:14px 0 6px}
+input[type=text]{width:100%;font:16px Archivo,system-ui,sans-serif;padding:11px 12px;border-radius:10px;border:2px solid var(--line);background:transparent;color:var(--ink)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.mini{font-size:13px;color:var(--mute)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+td,th{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:13px;color:var(--mute);font-weight:600}
+td.n,th.n{text-align:right;white-space:nowrap}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.grid4 div{background:var(--line);border-radius:12px;padding:10px;text-align:center}
+.grid4 b{display:block;font:24px "Archivo Black"}
+.grid4 span{font-size:12px;color:var(--mute)}
+details{margin-top:14px;font-size:14px;color:var(--mute)}
+summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.trail{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+.trail span{font-size:22px}
+textarea{width:100%;font:14px Archivo,system-ui,sans-serif;margin-top:8px;border-radius:10px;padding:8px;background:transparent;color:var(--ink);border:2px solid var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <button class="logo" id="logo" aria-label="Home">Out<span>rank</span></button>
+  <div class="hud">
+    <span class="pill">Streak <b id="hStreak">0</b></span>
+    <span class="pill">Best <b id="hBest">0</b></span>
+  </div>
+</header>
+<main>
+  <!-- HOME -->
+  <section id="home">
+    <h1 class="lead">Beat the card. Keep the streak.</h1>
+    <p class="sub">You're dealt a country. Pick the one of five that beats it on the category shown — the winner becomes your next card. One wrong answer ends the run.</p>
+    <div class="home">
+      <div class="panel">
+        <h2>Play</h2>
+        <label for="pname">Player name</label>
+        <input type="text" id="pname" maxlength="16" placeholder="e.g. Dave" autocomplete="off">
+        <label>Difficulty</label>
+        <div class="chips" id="diffChips">
+          <button class="chip" data-d="easy" aria-pressed="false">Easy</button>
+          <button class="chip" data-d="medium" aria-pressed="true">Medium</button>
+          <button class="chip" data-d="hard" aria-pressed="false">Hard</button>
+        </div>
+        <p class="mini" id="diffNote"></p>
+        <div class="row">
+          <button class="btn" id="startEndless">Play endless</button>
+          <button class="btn ghost" id="startDaily">Daily deal</button>
+        </div>
+        <p class="mini" id="dailyNote"></p>
+        <details>
+          <summary>How it works</summary>
+          <p>Every question has exactly five options and exactly one right answer: the other four sit clearly on the wrong side of your card. Near-ties are never asked, so small differences between data sources can't trip you up. Easy keeps the gaps wide and the countries familiar and shows your card's value. Hard narrows the gaps, adds less obvious countries and hides your card's number. Keys 1–5 answer, Enter deals the next card.</p>
+          <p>The Daily deal is the same chain for everyone on the same day (medium difficulty, one go), so you can compare streaks with friends.</p>
+        </details>
+        <details>
+          <summary>About the data</summary>
+          <p id="dataNote"></p>
+        </details>
+      </div>
+      <div class="panel">
+        <h2>Your record</h2>
+        <div class="grid4" id="statGrid"></div>
+        <h3>Top streaks</h3>
+        <table><thead><tr><th>#</th><th>Player</th><th>Mode</th><th class="n">Streak</th></tr></thead><tbody id="board"></tbody></table>
+        <p class="mini" id="boardEmpty">No streaks yet — saved on this device only.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="hidden">
+    <p class="meta" id="meta"></p>
+    <h1 class="q" id="qText"></h1>
+    <div class="board">
+      <div class="tcard" id="tcard"></div>
+      <div>
+        <div class="opts" id="opts"></div>
+        <div class="res hidden" id="res"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+{
+/* ---------- countries: code, name, capital, lat, lon, tier (1 = best known) ---------- */
+const C=[["GB","United Kingdom","London",51.51,-0.13,1],["FR","France","Paris",48.86,2.35,1],["DE","Germany","Berlin",52.52,13.40,1],["ES","Spain","Madrid",40.42,-3.70,1],["IT","Italy","Rome",41.90,12.50,1],["PT","Portugal","Lisbon",38.72,-9.14,1],["NL","Netherlands","Amsterdam",52.37,4.90,1],["BE","Belgium","Brussels",50.85,4.35,2],["CH","Switzerland","Bern",46.95,7.45,2],["AT","Austria","Vienna",48.21,16.37,2],["IE","Ireland","Dublin",53.35,-6.26,1],["NO","Norway","Oslo",59.91,10.75,2],["SE","Sweden","Stockholm",59.33,18.07,2],["FI","Finland","Helsinki",60.17,24.94,2],["DK","Denmark","Copenhagen",55.68,12.57,2],["PL","Poland","Warsaw",52.23,21.01,2],["GR","Greece","Athens",37.98,23.73,2],["TR","Turkey","Ankara",39.93,32.86,2],["RU","Russia","Moscow",55.76,37.62,1],["UA","Ukraine","Kyiv",50.45,30.52,2],["IS","Iceland","Reykjavik",64.15,-21.94,3],["US","United States","Washington",38.90,-77.04,1],["CA","Canada","Ottawa",45.42,-75.70,1],["MX","Mexico","Mexico City",19.43,-99.13,1],["BR","Brazil","Brasilia",-15.79,-47.88,1],["AR","Argentina","Buenos Aires",-34.60,-58.38,1],["CL","Chile","Santiago",-33.45,-70.67,2],["PE","Peru","Lima",-12.05,-77.04,2],["CO","Colombia","Bogota",4.71,-74.07,2],["CN","China","Beijing",39.90,116.40,1],["JP","Japan","Tokyo",35.68,139.69,1],["KR","South Korea","Seoul",37.57,126.98,2],["IN","India","New Delhi",28.61,77.21,1],["PK","Pakistan","Islamabad",33.68,73.05,2],["ID","Indonesia","Jakarta",-6.21,106.85,2],["TH","Thailand","Bangkok",13.76,100.50,2],["VN","Vietnam","Hanoi",21.03,105.85,2],["PH","Philippines","Manila",14.60,120.98,2],["AU","Australia","Canberra",-35.28,149.13,1],["NZ","New Zealand","Wellington",-41.29,174.78,1],["EG","Egypt","Cairo",30.04,31.24,1],["ZA","South Africa","Pretoria",-25.75,28.19,1],["NG","Nigeria","Abuja",9.08,7.40,2],["KE","Kenya","Nairobi",-1.29,36.82,2],["MA","Morocco","Rabat",34.02,-6.83,2],["ET","Ethiopia","Addis Ababa",9.03,38.74,3],["SA","Saudi Arabia","Riyadh",24.71,46.68,2],["IR","Iran","Tehran",35.69,51.39,2],["NP","Nepal","Kathmandu",27.72,85.32,3],["MN","Mongolia","Ulaanbaatar",47.89,106.91,3]]
+ .map(([code,name,cap,lat,lon,tier])=>({code,name,cap,lat,lon,tier}));
+const BY=Object.fromEntries(C.map(c=>[c.code,c]));
+const flag=c=>String.fromCodePoint(...[...c].map(ch=>127397+ch.charCodeAt(0)));
+const P=s=>{const o={},a=s.trim().split(/\s+/);for(let i=0;i<a.length;i+=2)o[a[i]]=+a[i+1];return o};
+
+/* ---------- raw data (approximate, mostly 2022–24 figures) ---------- */
+const D={
+pop:P("GB 68.3 FR 68.2 DE 84.5 ES 48.6 IT 59.0 PT 10.6 NL 17.9 BE 11.8 CH 8.9 AT 9.1 IE 5.3 NO 5.5 SE 10.6 FI 5.6 DK 6.0 PL 36.6 GR 10.4 TR 85.3 RU 144 UA 37 IS 0.39 US 335 CA 40.1 MX 129 BR 212 AR 46.0 CL 19.6 PE 34.0 CO 52.3 CN 1410 JP 124 KR 51.7 IN 1440 PK 245 ID 280 TH 71.7 VN 100.3 PH 115 AU 27.2 NZ 5.3 EG 114 ZA 63.0 NG 228 KE 55.1 MA 37.8 ET 129 SA 33.0 IR 90.6 NP 29.7 MN 3.5"),
+area:P("GB 243.6 FR 643.8 DE 357.6 ES 506.0 IT 301.3 PT 92.2 NL 41.9 BE 30.7 CH 41.3 AT 83.9 IE 70.3 NO 385.2 SE 450.3 FI 338.4 DK 43.1 PL 312.7 GR 132.0 TR 783.6 RU 17098 UA 603.6 IS 103.0 US 9834 CA 9985 MX 1964 BR 8516 AR 2780 CL 756.1 PE 1285 CO 1142 CN 9597 JP 377.9 KR 100.4 IN 3287 PK 881.9 ID 1905 TH 513.1 VN 331.2 PH 300.0 AU 7692 NZ 268.0 EG 1002 ZA 1221 NG 923.8 KE 580.4 MA 446.6 ET 1104 SA 2150 IR 1648 NP 147.2 MN 1564"),
+peak:P("GB 1345 FR 4806 DE 2962 ES 3718 IT 4806 PT 2351 BE 694 CH 4634 AT 3798 IE 1039 NO 2469 SE 2097 FI 1324 PL 2499 GR 2918 TR 5137 RU 5642 UA 2061 IS 2110 US 6190 CA 5959 MX 5636 BR 2995 AR 6961 CL 6893 PE 6768 CO 5730 CN 8849 JP 3776 KR 1950 IN 8586 PK 8611 ID 4884 TH 2565 VN 3143 PH 2954 AU 2228 NZ 3724 EG 2629 ZA 3450 NG 2419 KE 5199 MA 4167 ET 4550 SA 3000 IR 5609 NP 8849 MN 4374"),
+coast:P("GB 12429 FR 4853 DE 2389 ES 4964 IT 7600 PT 1793 NL 451 BE 67 CH 0 AT 0 IE 1448 NO 25148 SE 3218 FI 1250 DK 7314 PL 440 GR 13676 TR 7200 RU 37653 UA 2782 IS 4970 US 19924 CA 202080 MX 9330 BR 7491 AR 4989 CL 6435 PE 2414 CO 3208 CN 14500 JP 29751 KR 2413 IN 7000 PK 1046 ID 54716 TH 3219 VN 3444 PH 36289 AU 25760 NZ 15134 EG 2450 ZA 2798 NG 853 KE 536 MA 1835 ET 0 SA 2640 IR 2440 NP 0 MN 0"),
+borders:P("GB 1 DE 9 ES 5 IT 6 PT 1 NL 2 BE 4 CH 5 AT 8 IE 1 NO 3 SE 2 FI 3 DK 1 PL 7 GR 4 TR 8 RU 14 UA 7 IS 0 US 2 CA 1 MX 3 BR 10 AR 5 CL 3 PE 5 CO 5 CN 14 JP 0 KR 1 IN 6 PK 4 ID 3 TH 4 VN 3 PH 0 AU 0 NZ 0 EG 4 ZA 6 NG 4 KE 5 ET 6 SA 7 IR 7 NP 2 MN 2"),
+gdp:P("GB 3600 FR 3160 DE 4660 ES 1730 IT 2380 PT 310 NL 1230 BE 660 CH 940 AT 520 IE 580 NO 485 SE 600 FI 300 DK 410 PL 920 GR 255 TR 1320 RU 2160 UA 190 IS 33 US 29200 CA 2240 MX 1850 BR 2170 AR 630 CL 330 PE 290 CO 420 CN 18700 JP 4030 KR 1870 IN 3900 PK 375 ID 1400 TH 530 VN 475 PH 460 AU 1800 NZ 255 EG 390 ZA 400 NG 250 KE 125 MA 155 ET 145 SA 1100 IR 435 NP 43 MN 23"),
+life:P("GB 81.3 FR 82.9 DE 81.2 ES 83.8 IT 83.5 PT 82.4 NL 82.0 BE 82.1 CH 84.0 AT 81.6 IE 82.7 NO 83.4 SE 83.3 FI 82.0 DK 81.9 PL 78.5 GR 81.9 TR 78.5 RU 73 UA 70 IS 83.1 US 78.4 CA 82.6 MX 75.0 BR 76.0 AR 77.0 CL 81.0 PE 77.0 CO 77.5 CN 78.6 JP 84.7 KR 83.7 IN 72.0 PK 67.5 ID 71.5 TH 79.5 VN 74.5 PH 69.8 AU 83.5 NZ 82.5 EG 71.6 ZA 66.0 NG 54.5 KE 63.0 MA 75.3 ET 67.0 SA 78.0 IR 74.5 NP 70.5 MN 71.5"),
+olyS:P("GB 298 FR 239 DE 201 IT 229 ES 52 PT 6 NL 103 BE 44 CH 54 AT 20 IE 13 NO 61 SE 148 FI 101 DK 50 PL 79 GR 36 TR 42 UA 40 IS 0 US 1105 CA 77 MX 13 BR 40 AR 23 CL 3 PE 2 CO 7 CN 303 JP 189 KR 109 IN 10 PK 4 ID 10 TH 11 VN 1 PH 1 AU 182 NZ 63 EG 9 ZA 30 NG 3 KE 39 MA 7 ET 23 SA 0 IR 25 NP 0 MN 2"),
+olyW:P("NO 148 US 113 CA 77 AT 71 SE 65 CH 63 NL 53 FI 45 IT 42 FR 41 KR 33 CN 22 JP 17 GB 13 PL 7 AU 6 UA 3 NZ 2 ES 1 IS 0 BR 0 MX 0 IN 0 TR 0 GR 0 PT 0 IE 0 ZA 0"),
+wc:P("FR 16 DE 20 ES 16 IT 18 PT 8 NL 11 BE 14 CH 12 AT 7 IE 3 NO 3 SE 12 FI 0 DK 6 PL 9 GR 3 TR 2 UA 1 IS 1 US 11 CA 2 MX 17 BR 22 AR 18 CL 9 PE 5 CO 6 CN 1 JP 7 KR 11 IN 0 PK 0 TH 0 VN 0 PH 0 AU 6 NZ 2 EG 3 ZA 3 NG 6 KE 0 MA 6 ET 0 SA 6 IR 6 NP 0 MN 0"),
+unesco:P("GB 35 FR 53 DE 54 ES 50 IT 60 PT 17 NL 13 BE 16 CH 13 AT 12 IE 2 NO 8 SE 15 FI 7 DK 11 PL 17 GR 19 TR 21 RU 32 UA 8 IS 3 US 26 CA 22 MX 36 BR 24 AR 12 CL 7 PE 13 CO 9 CN 59 JP 26 KR 16 IN 43 PK 6 ID 10 TH 8 VN 9 PH 6 AU 20 NZ 3 EG 7 ZA 10 NG 2 KE 7 MA 9 ET 9 SA 8 IR 28 NP 4 MN 6"),
+code:P("GB 44 FR 33 DE 49 ES 34 IT 39 PT 351 NL 31 BE 32 CH 41 AT 43 IE 353 NO 47 SE 46 FI 358 DK 45 PL 48 GR 30 TR 90 RU 7 UA 380 IS 354 US 1 CA 1 MX 52 BR 55 AR 54 CL 56 PE 51 CO 57 CN 86 JP 81 KR 82 IN 91 PK 92 ID 62 TH 66 VN 84 PH 63 AU 61 NZ 64 EG 20 ZA 27 NG 234 KE 254 MA 212 ET 251 SA 966 IR 98 NP 977 MN 976"),
+un:P("GB 1945 FR 1945 DE 1973 ES 1955 IT 1955 PT 1955 NL 1945 BE 1945 CH 2002 AT 1955 IE 1955 NO 1945 SE 1946 FI 1955 DK 1945 PL 1945 GR 1945 TR 1945 RU 1945 UA 1945 IS 1946 US 1945 CA 1945 MX 1945 BR 1945 AR 1945 CL 1945 PE 1945 CO 1945 CN 1945 JP 1956 KR 1991 IN 1945 PK 1947 ID 1950 TH 1946 VN 1977 PH 1945 AU 1945 NZ 1945 EG 1945 ZA 1945 NG 1960 KE 1963 MA 1956 ET 1945 SA 1945 IR 1945 NP 1955 MN 1961"),
+median:P("GB 40.5 FR 42.0 DE 45.5 ES 45.0 IT 47.5 PT 46.5 NL 42.5 BE 41.5 CH 43 AT 43.5 IE 38.5 NO 40 SE 41 FI 43 DK 42 PL 41.5 GR 46 TR 33 RU 39.5 UA 41.5 IS 37 US 38.5 CA 41.5 MX 29.5 BR 34 AR 32 CL 36 PE 30 CO 31.5 CN 39.5 JP 49 KR 45 IN 28.5 PK 20.5 ID 30 TH 40 VN 33 PH 25.5 AU 38 NZ 38 EG 24 ZA 28 NG 18 KE 20 MA 29.5 ET 19.5 SA 30 IR 33 NP 25 MN 28.5"),
+fert:P("GB 1.44 FR 1.65 DE 1.35 ES 1.12 IT 1.20 PT 1.40 NL 1.43 BE 1.47 CH 1.33 AT 1.32 IE 1.55 NO 1.40 SE 1.45 FI 1.26 DK 1.50 PL 1.16 GR 1.30 TR 1.51 RU 1.41 UA 1.0 IS 1.59 US 1.62 CA 1.26 MX 1.82 BR 1.62 AR 1.40 CL 1.17 PE 1.9 CO 1.25 CN 1.0 JP 1.20 KR 0.72 IN 2.0 PK 3.6 ID 2.1 TH 1.0 VN 1.9 PH 1.9 AU 1.50 NZ 1.56 EG 2.8 ZA 2.2 NG 4.6 KE 3.2 MA 2.0 ET 4.0 SA 2.3 IR 1.6 NP 1.9 MN 2.7"),
+urban:P("GB 84.6 FR 81.8 DE 77.8 ES 81.6 IT 72.0 PT 67.9 NL 93.2 BE 98.2 CH 74.2 AT 59.7 IE 64.5 NO 84.0 SE 88.9 FI 85.7 DK 88.4 PL 60.1 GR 80.7 TR 77.5 RU 75.1 UA 70.0 IS 94.0 US 83.3 CA 81.8 MX 81.0 BR 87.6 AR 92.3 CL 88.0 PE 78.7 CO 82.0 CN 65.0 JP 92.0 KR 81.4 IN 36.0 PK 38.0 ID 58.0 TH 53.6 VN 39.5 PH 48.3 AU 86.6 NZ 86.9 EG 43.0 ZA 68.8 NG 54.0 KE 29.5 MA 65.0 ET 23.0 SA 85.0 IR 77.3 NP 22.0 MN 69.0"),
+forest:P("GB 13.2 FR 31.7 DE 32.7 ES 37.2 IT 32.5 PT 36.1 NL 11.0 BE 22.8 CH 32.1 AT 47.3 IE 11.4 NO 33.4 SE 68.7 FI 73.7 DK 15.7 PL 31.0 GR 30.3 TR 28.9 RU 49.8 UA 16.7 IS 0.5 US 33.9 CA 38.7 MX 33.8 BR 59.4 AR 10.4 CL 24.5 PE 56.5 CO 53.1 CN 23.4 JP 68.4 KR 64.4 IN 24.3 PK 4.8 ID 49.1 TH 38.9 VN 47.2 PH 24.1 AU 17.4 NZ 37.6 EG 0.05 ZA 14.0 NG 23.7 KE 6.3 MA 12.9 ET 15.1 SA 0.45 IR 6.6 NP 41.6 MN 9.1"),
+net:P("GB 97 FR 86 DE 92 ES 95 IT 86 PT 85 NL 96 BE 94 CH 96 AT 94 IE 96 NO 99 SE 96 FI 94 DK 98 PL 87 GR 84 TR 86 RU 90 UA 80 IS 99 US 93 CA 94 MX 80 BR 84 AR 89 CL 94 PE 75 CO 75 CN 77 JP 84 KR 97 IN 46 PK 33 ID 69 TH 88 VN 79 PH 74 AU 95 NZ 96 EG 72 ZA 75 NG 39 KE 40 MA 90 ET 19 SA 99 IR 79 NP 50 MN 83"),
+co2:P("GB 4.4 FR 4.5 DE 7.9 ES 5.0 IT 5.6 PT 4.0 NL 7.1 BE 7.7 CH 4.0 AT 6.5 IE 7.0 NO 7.3 SE 3.6 FI 6.5 DK 4.9 PL 7.8 GR 5.4 TR 5.1 RU 12.1 UA 3.5 IS 9.0 US 14.9 CA 14.2 MX 3.6 BR 2.2 AR 4.2 CL 4.3 PE 1.7 CO 1.9 CN 8.9 JP 8.5 KR 11.6 IN 2.0 PK 0.85 ID 2.6 TH 3.8 VN 3.5 PH 1.3 AU 14.5 NZ 6.2 EG 2.3 ZA 6.7 NG 0.6 KE 0.4 MA 1.8 ET 0.17 SA 18.2 IR 8.5 NP 0.5 MN 11"),
+renew:P("GB 47 FR 26 DE 52 ES 50 IT 41 PT 61 NL 48 BE 30 CH 68 AT 87 IE 40 NO 98 SE 69 FI 52 DK 81 PL 27 GR 50 TR 42 RU 18 IS 100 US 22 CA 67 MX 22 BR 89 AR 33 CL 63 PE 55 CO 75 CN 31 JP 23 KR 9 IN 20 PK 34 ID 19 TH 16 VN 43 PH 22 AU 35 NZ 87 EG 12 ZA 13 NG 22 KE 90 MA 22 ET 99 SA 1 IR 6 NP 99 MN 7"),
+beer:P("DE 92 AT 105 PL 97 ES 87 IE 85 GB 68 NL 70 BE 67 US 72 MX 66 BR 67 RU 70 AU 70 ZA 58 FR 33 IT 36 CN 31 JP 33 TR 12 IN 2 CH 54 PT 55 KR 40 VN 42"),
+coffee:P("FI 12 NO 9.9 SE 8.2 DK 8.7 NL 8.4 CH 7.9 IS 9.0 BE 6.8 AT 7.0 DE 6.0 IT 5.9 FR 5.4 CA 6.5 BR 6.0 US 4.4 GB 3.0 ES 4.5 PT 4.3 GR 5.4 PL 3.0 JP 3.6 KR 2.3 RU 1.8 AU 3.0 NZ 3.5 CN 0.2 IN 0.1 ET 2.2 TR 1.0"),
+tea:P("TR 3.2 IE 2.2 GB 1.9 RU 1.4 MA 1.2 NZ 1.2 EG 1.0 PL 1.0 JP 1.0 SA 0.9 ZA 0.8 NL 0.8 AU 0.7 IN 0.8 CN 1.6 PK 1.0 IR 1.5 US 0.4 DE 0.7 FR 0.2 IT 0.1 ES 0.1 BR 0.03"),
+temp:P("GB 9.0 FR 11.5 DE 9.3 ES 14.0 IT 13.5 PT 15.0 NL 10.2 BE 10.5 CH 5.5 AT 6.5 IE 9.5 NO 1.5 SE 2.1 FI 1.7 DK 8.5 PL 8.0 GR 15.4 TR 11.1 RU -5.1 UA 8.3 IS 1.8 US 8.6 CA -5.4 MX 21.0 BR 25.0 AR 14.8 CL 8.5 PE 19.6 CO 24.5 CN 6.9 JP 11.2 KR 11.5 IN 24.0 PK 20.3 ID 25.9 TH 26.3 VN 24.4 PH 25.9 AU 21.6 NZ 10.5 EG 22.1 ZA 17.8 NG 26.8 KE 24.8 MA 17.1 ET 22.2 SA 25.4 IR 17.3 NP 8.1 MN -0.7"),
+rain:P("GB 1220 FR 867 DE 700 ES 636 IT 832 PT 854 NL 778 BE 847 CH 1537 AT 1110 IE 1118 NO 1414 SE 624 FI 536 DK 703 PL 600 GR 652 TR 593 RU 460 UA 565 IS 1940 US 715 CA 537 MX 758 BR 1761 AR 591 CL 1522 PE 1738 CO 3240 CN 645 JP 1668 KR 1274 IN 1083 PK 494 ID 2702 TH 1622 VN 1821 PH 2348 AU 534 NZ 1732 EG 18 ZA 495 NG 1150 KE 630 MA 346 ET 848 SA 59 IR 228 NP 1500 MN 241"),
+nobel:P("US 420 GB 140 DE 115 FR 75 SE 33 CH 30 RU 30 JP 30 AT 22 NL 22 IT 21 CA 30 DK 14 NO 14 PL 18 BE 11 IN 12 AU 15 ES 8 IE 11 IS 1 FI 5 GR 2 TR 2 UA 6 CN 8 KR 2 ZA 11 EG 4 IR 2 PK 2 NG 1 KE 1 ET 1 PT 2 MX 3 BR 0 AR 5 CL 2 PE 1 CO 2 PH 1 NZ 3 MA 0 SA 0 NP 0 MN 0 TH 0"),
+mil:P("CN 2035 IN 1455 US 1330 RU 1320 KR 500 PK 650 VN 450 ID 400 TR 355 IR 610 EG 440 BR 360 TH 360 FR 200 DE 180 JP 247 MX 240 CO 290 GB 150 IT 165 ES 120 PL 200 SA 250 AU 60 CA 68 NL 41 BE 25 PT 27 AT 22 IE 7.5 NO 23 SE 25 FI 24 DK 15 GR 140 AR 75 CL 77 PE 80 PH 145 NZ 9 ZA 70 NG 135 KE 25 MA 195 ET 160 NP 95 MN 10 IS 0"),
+tour:P("FR 100 ES 85 US 66 IT 57 TR 55 MX 42 DE 38 GB 38 TH 28 JP 25 AT 31 GR 33 PT 26 NL 20 PL 19 RU 24 CA 18 SA 27 KR 11 VN 12.6 IN 9 ID 11.7 PH 5.4 AU 7 NZ 3.2 EG 15 ZA 8.5 MA 14.5 IR 6 BR 6 AR 7 CL 4.5 PE 4.4 CO 4.5 CH 11.8 BE 9 IE 11 NO 5.9 SE 7.6 FI 3.3 DK 11 IS 2.2 KE 1.8 ET 0.8 NP 1.0 MN 0.6 CN 66"),
+gold:P("US 8133 DE 3352 IT 2452 FR 2437 RU 2335 CN 2280 CH 1040 JP 846 IN 850 NL 612 TR 600 PT 383 PL 450 SA 323 GB 310 ES 282 AT 280 BE 227 TH 235 EG 127 MX 120 ZA 125 AU 80 SE 126 KR 104 ID 79 PK 65 CA 0 NO 0 NZ 0 DK 66 FI 49 IE 6 GR 114 AR 62 CL 0 PE 35 IS 2 NG 21 MA 22"),
+nuke:P("US 94 FR 56 CN 57 RU 36 KR 26 IN 23 CA 17 UA 15 GB 9 ES 7 SE 6 CH 4 FI 5 PK 6 AR 3 BR 2 MX 2 ZA 2 NL 1 IR 1 DE 0 IT 0 AT 0 PT 0 PL 0 EG 0 SA 0 NO 0 DK 0 IE 0 AU 0 NZ 0 IS 0 GR 0 CL 0 PE 0 CO 0 ID 0 TH 0 VN 0 PH 0 NG 0 KE 0 MA 0 ET 0 NP 0 MN 0"),
+rail:P("US 225000 CN 160000 RU 86000 IN 68000 CA 49000 DE 38000 AU 33000 FR 28000 BR 30000 JP 27000 GB 16000 MX 26700 UA 21600 PL 19000 IT 16800 ZA 20900 ES 16000 SE 11000 IR 13000 TR 12000 EG 5000 CH 5300 AT 5000 FI 5900 NO 4100 NL 3000 BE 3600 PT 2500 DK 2600 CL 7000 PK 7800 ID 7000 TH 4100 VN 2600 KR 4000 NZ 4100 IE 1700 GR 2200 PE 1900 CO 2100 NG 3800 MA 2100 SA 5400 MN 1800"),
+height:P("NL 183.8 DK 181.9 NO 180.5 DE 180.0 IS 181 SE 180 FI 180 BE 181 CH 178.5 AT 179.5 IE 179 GB 177.5 FR 175.6 ES 176.6 IT 177.8 PT 172.9 PL 179.7 GR 178.5 TR 176 RU 176.5 UA 178 US 176.9 CA 178.1 MX 170.0 BR 173.6 AR 174.6 CL 171.8 PE 165.2 CO 170.9 CN 175.7 JP 170.8 KR 175.5 IN 166.5 PK 167 ID 166.0 TH 170.3 VN 168.1 PH 165.2 AU 179.2 NZ 177.7 EG 170.3 ZA 168 NG 169 KE 170 MA 172 ET 166 SA 172 IR 174 NP 164 MN 169"),
+elev:P("NP 3265 CH 1350 AT 910 CN 1840 MN 1528 ET 1330 IR 1305 TR 1132 AR 595 CL 1871 PE 1555 MX 1111 CO 593 ZA 1034 KE 762 MA 909 ES 660 IT 538 NO 460 GR 498 US 760 CA 487 BR 320 IN 160 PK 900 AU 330 NZ 388 JP 438 KR 282 PH 442 ID 367 TH 287 VN 398 EG 321 NG 380 SA 665 RU 600 UA 175 PL 173 DE 263 FR 375 GB 162 IE 118 NL 30 BE 181 DK 34 SE 320 FI 164 PT 372 IS 557"),
+hot:P("US 56.7 IR 54.0 PK 53.7 IN 51.0 AU 50.7 CN 52.2 MA 50.4 IT 48.8 GR 48.0 ES 47.6 PT 47.3 FR 46.0 TR 49.1 CA 49.6 AR 48.9 DE 41.2 GB 40.3 NL 40.7 BE 41.8 CH 41.5 AT 40.5 PL 40.2 SE 38.0 NO 35.6 FI 37.2 DK 36.4 IE 33.0 IS 30.5 JP 41.5 KR 41.0 NZ 42.4 RU 45.4 BR 44.8 TH 44.6 VN 44.2 SA 51.8"),
+cold:P("RU -67.7 CA -63.0 US -62.2 MN -55.3 SE -52.6 CN -52.3 FI -51.5 NO -51.4 TR -46.4 UA -41.9 CH -41.8 PL -41.0 JP -41.0 IS -38.0 KR -32.6 AR -32.8 GB -27.2 NZ -25.6 AU -23.0 ZA -20.1 IE -19.1 BR -14.0"),
+cars:P("US 850 NZ 870 AU 750 IT 680 PL 690 CA 700 DE 590 FR 580 ES 540 GB 540 JP 610 KR 490 IS 800 CH 540 AT 560 NO 520 SE 480 FI 650 DK 470 NL 520 BE 520 PT 550 GR 550 IE 450 RU 320 TR 180 MX 300 BR 210 AR 320 CL 280 CN 225 IN 30 PK 20 ID 60 TH 230 VN 30 PH 40 EG 50 ZA 180 NG 30 KE 30 MA 100 ET 5 SA 340 IR 200 NP 10 MN 200"),
+elec:P("IS 50000 NO 23000 FI 15000 CA 14000 SE 12500 US 12000 KR 11000 AU 9500 NZ 8500 SA 9600 JP 7700 CH 6800 AT 7300 BE 7500 FR 6700 DE 6000 NL 6500 DK 5800 IE 6000 ES 5000 IT 5000 GB 4300 PL 4200 GR 4800 PT 4700 RU 7000 CN 6200 UA 3000 TR 3500 IR 3500 CL 4000 AR 3000 ZA 3700 BR 2800 MX 2300 TH 2700 VN 2700 MN 2300 EG 1700 CO 1500 PE 1500 ID 1150 IN 1300 PH 800 PK 600 MA 1000 NG 150 KE 180 NP 400 ET 100"),
+wineP:P("IT 49.8 FR 45.6 ES 35.7 US 22.4 AU 13.1 CL 12.4 AR 11.5 ZA 10.2 DE 8.9 PT 6.8 RU 4.7 CN 4.2 NZ 3.8 BR 3.2 AT 2.5 GR 2.1 CH 1.0"),
+wineC:P("PT 52 FR 47 IT 44 CH 35 AT 30 GR 26 DE 24 AU 26 ES 22 NL 20 BE 25 DK 28 SE 21 GB 18 NZ 20 IE 16 AR 19 US 12 CA 13 NO 15 FI 10 CL 12 ZA 7 RU 7 PL 6 JP 3 CN 1 BR 2"),
+obese:P("US 36 MX 29 NZ 31 AU 29 GB 28 CA 29 TR 32 SA 35 EG 32 CL 28 AR 28 IE 25 ES 24 DE 22 FR 21 IT 20 NL 20 BE 22 CH 20 AT 20 NO 23 SE 21 FI 22 DK 20 PL 23 GR 25 PT 21 RU 23 UA 24 IS 22 BR 22 PE 20 CO 22 CN 6 JP 4 KR 5 IN 4 PK 9 ID 7 TH 10 VN 2 PH 6 ZA 28 NG 9 KE 7 MA 26 ET 4 IR 26 NP 4 MN 20"),
+capElev:P("CO 2640 ET 2355 MX 2240 NP 1400 KE 1795 IR 1190 MN 1350 BR 1172 ZA 1339 ES 657 TR 938 CH 540 SA 612 KR 38 CL 570 AU 578 PK 540 CN 44 AT 190 RU 156 UA 179 PL 100 DE 34 FR 35 GB 11 IT 21 PT 2 NL 0 BE 76 IE 20 NO 23 SE 28 FI 17 DK 14 GR 70 IS 15 US 20 CA 70 AR 25 PE 154 JP 40 IN 216 ID 8 TH 2 VN 15 PH 5 NZ 20 EG 23 MA 75"),
+tz:P("GB 0 FR 1 DE 1 ES 1 IT 1 PT 0 NL 1 BE 1 CH 1 AT 1 IE 0 NO 1 SE 1 FI 2 DK 1 PL 1 GR 2 TR 3 RU 3 UA 2 IS 0 US -5 CA -5 MX -6 BR -3 AR -3 CL -4 PE -5 CO -5 CN 8 JP 9 KR 9 IN 5.5 PK 5 ID 7 TH 7 VN 7 PH 8 AU 10 NZ 12 EG 2 ZA 2 NG 1 KE 3 ET 3 SA 3 IR 3.5 NP 5.75 MN 8")
+};
+const letters=s=>s.replace(/[^A-Za-z]/g,'').length, vowels=s=>(s.match(/[aeiou]/gi)||[]).length;
+const hav=(a,b,c,d)=>{const r=Math.PI/180,x=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 12742*Math.asin(Math.sqrt(x))};
+const from=k=>c=>D[k][c.code];
+const both=(a,b,f)=>c=>(D[a][c.code]==null||D[b][c.code]==null)?undefined:f(D[a][c.code],D[b][c.code]);
+
+/* ---------- categories: label, question, higher/lower words, unit, dp, tolerance [relative, absolute] ---------- */
+const MORE=["MORE","FEWER"],HL=["HIGHER","LOWER"],LS=["LARGER","SMALLER"],LONG=["LONGER","SHORTER"];
+const K=[
+["pop","Population","Which country has a {d} population than {X}?",LS,"# m",1,[.12,0],from("pop")],
+["area","Land area","Which country is {d} than {X} by area?",["BIGGER","SMALLER"],"#k km²",0,[.12,0],from("area")],
+["peak","Highest mountain","Which country has a {d} highest mountain than {X}?",HL,"# m",0,[.06,150],from("peak")],
+["coast","Coastline","Which country has a {d} coastline than {X}?",LONG,"# km",0,[.15,50],from("coast")],
+["borders","Neighbouring countries","Which country borders {d} countries than {X}?",MORE,"#",0,[0,2],from("borders")],
+["gdp","GDP","Which country has a {d} economy (GDP) than {X}?",["BIGGER","SMALLER"],"$#bn",0,[.15,0],from("gdp")],
+["gdppc","GDP per person","Which country has a {d} GDP per person than {X}?",HL,"$#k",1,[.15,0],both("gdp","pop",(g,p)=>g/p)],
+["dens","Population density","Which country is {d} densely populated than {X}?",MORE,"# /km²",0,[.15,0],both("pop","area",(p,a)=>p/a*1000)],
+["life","Life expectancy","Which country has a {d} life expectancy than {X}?",HL,"# yrs",1,[0,2],from("life")],
+["median","Median age","Which country has a {d} median age than {X}?",HL,"# yrs",1,[0,2],from("median")],
+["fert","Births per woman","Which country has a {d} fertility rate than {X}?",HL,"#",2,[.12,0],from("fert")],
+["urban","Living in cities","Which country has a {d} share of people living in cities than {X}?",HL,"#%",0,[0,5],from("urban")],
+["rural","Rural population","Which country has {d} people living in the countryside than {X}?",MORE,"# m",1,[.15,0],both("pop","urban",(p,u)=>p*(100-u)/100)],
+["forest","Forest cover","Which country has a {d} share of its land covered by forest than {X}?",HL,"#%",1,[.15,3],from("forest")],
+["forestA","Forest area","Which country has {d} forest in total than {X}?",MORE,"#k km²",0,[.15,0],both("area","forest",(a,f)=>a*f/100)],
+["net","Internet users","Which country has a {d} share of people online than {X}?",HL,"#%",0,[0,5],from("net")],
+["co2","CO₂ per person","Which country emits {d} CO₂ per person than {X}?",MORE.map(w=>w=="MORE"?"MORE":"LESS"),"# t",1,[.15,0],from("co2")],
+["co2t","Total CO₂","Which country emits {d} CO₂ in total than {X}?",["MORE","LESS"],"# Mt",0,[.15,0],both("pop","co2",(p,e)=>p*e)],
+["renew","Renewable electricity","Which country makes a {d} share of its electricity from renewables than {X}?",HL,"#%",0,[0,8],from("renew")],
+["elec","Electricity use per person","Which country uses {d} electricity per person than {X}?",["MORE","LESS"],"# kWh",0,[.2,0],from("elec")],
+["olyS","Summer Olympic golds","Which country has won {d} Summer Olympic gold medals than {X}?",MORE,"#",0,[.15,3],from("olyS")],
+["olyW","Winter Olympic golds","Which country has won {d} Winter Olympic gold medals than {X}?",MORE,"#",0,[.2,3],from("olyW")],
+["wc","World Cup appearances","Which country had made {d} men's World Cup finals appearances than {X} (up to 2022)?",MORE,"#",0,[0,2],from("wc")],
+["unesco","World Heritage Sites","Which country has {d} UNESCO World Heritage Sites than {X}?",MORE,"#",0,[.1,2],from("unesco")],
+["nobel","Nobel laureates","Which country has produced {d} Nobel laureates than {X}?",MORE,"#",0,[.25,3],from("nobel")],
+["mil","Active military","Which country has a {d} active military than {X}?",LS,"#k",0,[.2,0],from("mil")],
+["tour","Tourist arrivals","Which country welcomes {d} international tourists a year than {X}?",MORE,"# m",1,[.2,0],from("tour")],
+["gold","Gold reserves","Which country holds {d} gold in its national reserves than {X}?",["MORE","LESS"],"# t",0,[.2,10],from("gold")],
+["nuke","Nuclear reactors","Which country runs {d} nuclear power reactors than {X}?",MORE,"#",0,[.15,2],from("nuke")],
+["rail","Rail network","Which country has a {d} rail network than {X}?",LONG,"# km",0,[.2,0],from("rail")],
+["cars","Cars per 1,000 people","Which country has {d} cars per 1,000 people than {X}?",MORE,"#",0,[.25,0],from("cars")],
+["beer","Beer drunk per person","Which country drinks {d} beer per person than {X}?",["MORE","LESS"],"# L",0,[.2,0],from("beer")],
+["wineC","Wine drunk per person","Which country drinks {d} wine per person than {X}?",["MORE","LESS"],"# L",0,[.2,0],from("wineC")],
+["wineP","Wine production","Which country produces {d} wine than {X}?",["MORE","LESS"],"# m hL",1,[.2,0],from("wineP")],
+["coffee","Coffee per person","Which country drinks {d} coffee per person than {X}?",["MORE","LESS"],"# kg",1,[.2,0],from("coffee")],
+["tea","Tea per person","Which country drinks {d} tea per person than {X}?",["MORE","LESS"],"# kg",2,[.25,0],from("tea")],
+["obese","Adult obesity","Which country has a {d} adult obesity rate than {X}?",HL,"#%",0,[0,4],from("obese")],
+["height","Average male height","In which country are men {d} on average than in {X}?",["TALLER","SHORTER"],"# cm",1,[0,2],from("height")],
+["temp","Average temperature","Which country has a {d} average annual temperature than {X}?",["WARMER","COLDER"],"# °C",1,[0,2],from("temp")],
+["rain","Annual rainfall","Which country gets {d} rain a year than {X}?",["MORE","LESS"],"# mm",0,[.15,0],from("rain")],
+["hot","Hottest ever recorded","Which country's hottest recorded temperature is {d} than {X}'s?",HL,"# °C",1,[0,2],from("hot")],
+["cold","Coldest ever recorded","Which country's coldest recorded temperature is {d} than {X}'s?",["WARMER","COLDER"],"# °C",1,[0,3],from("cold")],
+["elev","Average elevation","Which country sits {d} on average than {X}?",HL,"# m",0,[.2,30],from("elev")],
+["capElev","Capital's altitude","Which country's capital sits {d} above sea level than {C}?",HL,"# m",0,[.2,50],from("capElev")],
+["north","Capital latitude","Whose capital is further {d} than {C}?",["NORTH","SOUTH"],"#°",1,[0,1.5],c=>c.lat],
+["east","Capital longitude","Whose capital is further {d} than {C}?",["EAST","WEST"],"#°",1,[0,2],c=>c.lon],
+["equator","Distance from equator","Whose capital is {d} the equator than {C}?",["FURTHER FROM","CLOSER TO"],"# km",0,[.1,150],c=>Math.abs(c.lat)*111.2],
+["london","Distance from London","Whose capital is {d} London than {C}?",["FURTHER FROM","CLOSER TO"],"# km",0,[.08,150],c=>hav(51.51,-0.13,c.lat,c.lon)],
+["tz","Capital clock (standard time)","Whose clocks are further {d} than in {C} (standard time)?",["AHEAD","BEHIND"],"GMT #",2,[0,1],from("tz")],
+["code","Dialling code","Which country has a {d} international dialling code than {X}?",HL,"+#",0,[0,1],from("code")],
+["un","Year joined the UN","Which country joined the United Nations {d} than {X}?",["LATER","EARLIER"],"#",0,[0,1],from("un")],
+["letters","Letters in name","Which country has {d} letters in its name than {X}?",MORE,"#",0,[0,1],c=>letters(c.name)],
+["capLetters","Letters in capital","Whose capital has {d} letters in its name than {C}?",MORE,"#",0,[0,1],c=>letters(c.cap)],
+["vowels","Vowels in name","Which country has {d} vowels in its name than {X}?",MORE,"#",0,[0,1],c=>vowels(c.name)]
+].map(([id,label,q,w,u,dp,t,f])=>{const v={};C.forEach(c=>{const x=f(c);if(x!=null&&isFinite(x))v[c.code]=x});return {id,label,q,w,u,dp,t,v}});
+
+const fmt=(k,x)=>{let n=Math.abs(x)>=1000&&k.dp>0?Math.round(x):x;let s=(+n).toLocaleString("en-GB",{minimumFractionDigits:0,maximumFractionDigits:k.dp});
+  if(k.id=="tz")s=(x>=0?"+":"−")+Math.abs(x).toLocaleString("en-GB",{maximumFractionDigits:2});
+  if(k.id=="north")s=Math.abs(x).toFixed(1)+(x>=0?"N":"S");if(k.id=="east")s=Math.abs(x).toFixed(1)+(x>=0?"E":"W");
+  if(k.id=="north"||k.id=="east")return s.replace(/([NSEW])$/,"° $1");
+  if(k.id=="un")return String(x);
+  return k.u.replace("#",s)};
+
+/* ---------- settings ---------- */
+const DIFF={easy:{mult:3,tier:1,show:true,label:"Easy",note:"Wide gaps, familiar countries, your card's value shown."},
+ medium:{mult:1.7,tier:2,show:true,label:"Medium",note:"Closer calls and a wider spread of countries."},
+ hard:{mult:1,tier:3,show:false,label:"Hard",note:"Tight margins, all 50 countries, and your card's number is hidden."}};
+const store={get(){try{return JSON.parse(localStorage.getItem("outrank")||"{}")}catch(e){return {}}},set(o){try{localStorage.setItem("outrank",JSON.stringify(o))}catch(e){}}};
+let S=Object.assign({best:{},played:0,answered:0,correct:0,board:[],name:"",diff:"medium",daily:{}},store.get());
+const save=()=>store.set(S);
+
+/* ---------- rng ---------- */
+const mulberry=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const todayKey=()=>{const d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()};
+const dayNo=()=>{const d=new Date(),o=new Date(2026,10,24);return Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate())-o)/864e5)+1};
+
+/* ---------- game state ---------- */
+let G=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const pick=(a,r)=>a[Math.floor(r()*a.length)];
+const shuffle=(a,r)=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+function clear(k,v,ref,mult){return Math.abs(v-ref)>=Math.max(k.t[1],k.t[0]*Math.max(Math.abs(v),Math.abs(ref)))*mult-1e-9}
+
+/* Builds a question with exactly one correct option. Returns null only if impossible for this card. */
+function makeQ(ref){
+  const r=G.rng,d=DIFF[G.diff];
+  for(let attempt=0;attempt<400;attempt++){
+    const relax=Math.floor(attempt/80);               // gradually widen the pool if a card is awkward
+    const tier=Math.min(3,d.tier+relax), mult=Math.max(1,d.mult-relax*0.5);
+    const cats=K.filter(k=>k.v[ref.code]!=null&&!G.recentCats.includes(k.id));
+    if(!cats.length){G.recentCats=[];continue}
+    const k=pick(cats,r), rv=k.v[ref.code], dir=r()<.5?1:-1;
+    const pool=C.filter(c=>c!==ref&&k.v[c.code]!=null&&c.tier<=tier&&!G.recentRefs.includes(c.code));
+    const good=pool.filter(c=>dir*(k.v[c.code]-rv)>0&&clear(k,k.v[c.code],rv,mult));
+    const bad=pool.filter(c=>dir*(k.v[c.code]-rv)<0&&clear(k,k.v[c.code],rv,mult));
+    if(!good.length||bad.length<4)continue;
+    const near=a=>a.slice().sort((x,y)=>Math.abs(k.v[x.code]-rv)-Math.abs(k.v[y.code]-rv));
+    let ans,wrong;
+    if(G.diff=="easy"){ans=pick(good,r);wrong=shuffle(bad,r).slice(0,4)}
+    else if(G.diff=="medium"){const g=near(good),b=near(bad);ans=pick(g.slice(0,Math.max(1,Math.ceil(g.length/2))),r);wrong=shuffle(b.slice(0,Math.max(4,Math.ceil(b.length*.6))),r).slice(0,4)}
+    else{const g=near(good),b=near(bad);ans=pick(g.slice(0,Math.min(3,g.length)),r);wrong=shuffle(b.slice(0,Math.min(b.length,7)),r).slice(0,4)}
+    G.recentCats.push(k.id);if(G.recentCats.length>12)G.recentCats.shift();
+    return {k,dir,ref,ans,opts:shuffle([ans,...wrong],r)};
+  }
+  return null;
+}
+
+function start(mode){
+  const daily=mode=="daily";
+  if(daily&&S.daily.key==todayKey()){renderHome();return}
+  const seed=daily?todayKey()*7919:Math.floor(Math.random()*2**31);
+  G={mode,diff:daily?"medium":S.diff,rng:mulberry(seed),streak:0,recentCats:[],recentRefs:[],trail:[]};
+  const firstPool=C.filter(c=>c.tier<=DIFF[G.diff].tier);
+  G.ref=pick(firstPool,G.rng);
+  $("home").classList.add("hidden");$("game").classList.remove("hidden");
+  next();
+}
+function next(){
+  let q=makeQ(G.ref);
+  while(!q){G.ref=pick(C,G.rng);q=makeQ(G.ref)}   // never ask a question without an answer
+  G.q=q;G.locked=false;render();
+}
+function card(c,k){
+  const d=DIFF[G.diff];
+  const others=shuffle(K.filter(x=>x!==k&&x.v[c.code]!=null),mulberry(c.code.charCodeAt(0)*97+c.code.charCodeAt(1)+G.streak)).slice(0,4);
+  const row=(x,on)=>`<li class="${on?"on":""}"><span>${esc(x.label)}</span><span>${on&&!d.show&&!G.locked?"???":esc(fmt(x,x.v[c.code]))}</span></li>`;
+  return `<div class="thead"><span class="flag" aria-hidden="true">${flag(c.code)}</span><div><h2>${esc(c.name)}</h2><p>Capital: ${esc(c.cap)}</p></div></div>
+   <ul class="stats">${row(k,true)}${others.map(x=>row(x,false)).join("")}</ul><div class="tfoot">Your card · beat it on the highlighted stat</div>`;
+}
+function render(){
+  const q=G.q,k=q.k,word=k.w[q.dir==1?0:1];
+  $("meta").textContent=(G.mode=="daily"?`Daily deal #${dayNo()}`:`Endless · ${DIFF[G.diff].label}`)+` · Card ${G.streak+1}`;
+  $("qText").innerHTML=esc(k.q).replace("{d}",`<em>${esc(word)}</em>`).replace("{X}",esc(q.ref.name)).replace("{C}",esc(q.ref.name)+"'s capital, "+esc(q.ref.cap));
+  $("tcard").innerHTML=card(q.ref,k);
+  $("tcard").style.animation="none";void $("tcard").offsetWidth;$("tcard").style.animation="";
+  $("opts").innerHTML=q.opts.map((c,i)=>`<button class="opt" data-i="${i}"><span class="k">${i+1}</span><span class="flag" aria-hidden="true">${flag(c.code)}</span><span>${esc(c.name)}</span><span class="v"></span></button>`).join("");
+  $("res").classList.add("hidden");
+  hud();
+}
+function answer(i){
+  if(G.locked)return;G.locked=true;
+  const q=G.q,chosen=q.opts[i],ok=chosen===q.ans;
+  S.answered++;if(ok)S.correct++;
+  document.querySelectorAll(".opt").forEach((b,j)=>{const c=q.opts[j];b.disabled=true;b.querySelector(".v").textContent=fmt(q.k,q.k.v[c.code]);
+    if(c===q.ans)b.classList.add("right");else if(j===i)b.classList.add("wrong");else b.classList.add("dim")});
+  $("tcard").innerHTML=card(q.ref,q.k);
+  G.trail.push(ok?"🟩":"🟥");
+  const res=$("res");res.classList.remove("hidden");
+  if(ok){
+    G.streak++;G.recentRefs.push(q.ref.code);if(G.recentRefs.length>3)G.recentRefs.shift();G.ref=q.ans;
+    res.innerHTML=`<div><h3>Correct! Streak ${G.streak}</h3><p>${esc(q.ans.name)} is your next card.</p></div><button class="btn" id="nextBtn">Next card ↵</button>`;
+    $("nextBtn").onclick=next;$("nextBtn").focus();
+  } else gameOver(res,q);
+  hud();save();
+}
+function gameOver(res,q){
+  const key=G.mode=="daily"?"daily":G.diff,prev=S.best[key]||0,isBest=G.streak>prev;
+  if(isBest)S.best[key]=G.streak;
+  S.played++;
+  const name=(S.name||"Player").slice(0,16);
+  if(G.streak>0){S.board.push({n:name,s:G.streak,m:G.mode=="daily"?"Daily":DIFF[G.diff].label,t:Date.now()});S.board.sort((a,b)=>b.s-a.s||a.t-b.t);S.board=S.board.slice(0,10)}
+  if(G.mode=="daily")S.daily={key:todayKey(),streak:G.streak,trail:G.trail.join("")};
+  const share=shareText();
+  res.innerHTML=`<div><h3>Out! Streak of ${G.streak}${isBest?" — new best":""}</h3><p>The answer was ${esc(q.ans.name)}. Best ${esc(key)}: ${Math.max(prev,G.streak)}.</p><div class="trail">${G.trail.map(t=>`<span>${t}</span>`).join("")}</div></div>
+   <div class="row" style="margin:0 0 0 auto"><button class="btn ghost" id="shareBtn">Copy result</button><button class="btn" id="againBtn">${G.mode=="daily"?"Home":"Play again ↵"}</button></div>
+   <textarea id="shareTxt" rows="3" class="hidden" readonly>${esc(share)}</textarea>`;
+  $("againBtn").onclick=()=>G.mode=="daily"?goHome():start("endless");$("againBtn").focus();
+  $("shareBtn").onclick=()=>copy(share);
+}
+function shareText(){
+  const t=G?G.trail.join(""):(S.daily.trail||"");
+  const s=G?G.streak:S.daily.streak;
+  return G&&G.mode!="daily"?`Outrank (${DIFF[G.diff].label}) — streak ${s} 🔥\n${t}`:`Outrank daily #${dayNo()} — streak ${s} 🔥\n${t}`;
+}
+function copy(text){
+  const show=()=>{const ta=$("shareTxt");if(ta){ta.classList.remove("hidden");ta.select()}};
+  try{navigator.clipboard.writeText(text).then(()=>{$("shareBtn").textContent="Copied!"},show)}catch(e){show()}
+}
+function hud(){$("hStreak").textContent=G?G.streak:0;const key=G?(G.mode=="daily"?"daily":G.diff):S.diff;$("hBest").textContent=S.best[key]||0}
+function goHome(){G=null;$("game").classList.add("hidden");$("home").classList.remove("hidden");renderHome()}
+function renderHome(){
+  $("pname").value=S.name||"";
+  document.querySelectorAll("#diffChips .chip").forEach(b=>b.setAttribute("aria-pressed",b.dataset.d==S.diff));
+  $("diffNote").textContent=DIFF[S.diff].note;
+  const done=S.daily.key==todayKey();
+  $("startDaily").textContent=done?`Today's deal: ${S.daily.streak} — copy`:`Daily deal #${dayNo()}`;
+  $("dailyNote").textContent=done?"You've played today's deal. A new one is dealt at midnight.":"Same chain for everyone today — one go.";
+  const acc=S.answered?Math.round(S.correct/S.answered*100)+"%":"–";
+  $("statGrid").innerHTML=[["Best easy",S.best.easy||0],["Best medium",S.best.medium||0],["Best hard",S.best.hard||0],["Accuracy",acc]].map(([l,v])=>`<div><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
+  $("board").innerHTML=S.board.map((e,i)=>`<tr><td>${i+1}</td><td>${esc(e.n)}</td><td>${esc(e.m)}</td><td class="n"><b>${esc(e.s)}</b></td></tr>`).join("");
+  $("boardEmpty").classList.toggle("hidden",S.board.length>0);
+  hud();
+}
+
+/* ---------- events ---------- */
+$("opts").addEventListener("click",e=>{const b=e.target.closest(".opt");if(b)answer(+b.dataset.i)});
+$("diffChips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;S.diff=b.dataset.d;save();renderHome()});
+$("pname").addEventListener("input",e=>{S.name=e.target.value.trim();save()});
+$("startEndless").onclick=()=>start("endless");
+$("startDaily").onclick=()=>{if(S.daily.key==todayKey()){const t=shareText();try{navigator.clipboard.writeText(t).then(()=>{$("startDaily").textContent="Copied!"},()=>{})}catch(e){}}else start("daily")};
+$("logo").onclick=()=>{if(G&&!G.locked&&!confirmLeave())return;goHome()};
+const confirmLeave=()=>true;
+document.addEventListener("keydown",e=>{
+  if(!G||e.target.tagName=="INPUT")return;
+  if(!G.locked&&/^[1-5]$/.test(e.key))answer(+e.key-1);
+  else if(G.locked&&e.key=="Enter"){const b=$("nextBtn")||$("againBtn");if(b&&document.activeElement!==b){e.preventDefault();b.click()}}
+});
+$("dataNote").textContent=`${K.length} categories across ${C.length} countries. Figures are approximate and mostly 2022–24, drawn from widely used sources such as the CIA World Factbook, World Bank, UN, WHO, IOC, FIFA, UNESCO, IAEA, OIV and World Gold Council. Distances, latitudes, letter counts and per-person figures are calculated. Questions only use a pair of countries when the gap between them is comfortably bigger than any normal disagreement between sources.`;
+renderHome();
+}
+</script>
+</body>
+</html>
